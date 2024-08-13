@@ -198,7 +198,7 @@ def preprocess_input_svr(start_date, end_date, num_customers, average_customers_
     data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     
     scaler = MinMaxScaler()
-    data[features_svr] = scaler.fit_transform(data[features_svr])
+    data[['מספר לקוחות']] = scaler.fit_transform(data[['מספר לקוחות']])
     
     return data, scaler
 
@@ -257,10 +257,10 @@ def load_model_and_predict(dish, input_data, model_type, scaler=None):
         predictions = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
     elif model_type == 'stacking_rf':
         features = input_data[features_stacking_rf]
+        predictions = model.predict(features)
     else:
         features = input_data[features_rf]
-    
-    predictions = model.predict(features)
+        predictions = model.predict(features)        
 
     # המרה למספרים שלמים בעזרת np.ceil
     predictions = np.ceil(predictions).astype(int)
