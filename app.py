@@ -191,16 +191,16 @@ def add_features(data, average_customers_per_day, average_customers_per_month, h
     
     return data
 
+# Preprocessing function for SVR
 def preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     dates = pd.date_range(start=start_date, end=end_date, freq='D')
     data = pd.DataFrame({'תאריך': dates})
     data['מספר לקוחות'] = num_customers
     data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
-    
-    scaler_X = MinMaxScaler()
-    scaled_data = scaler_X.fit_transform(data[features_svr])
-    
-    return pd.DataFrame(scaled_data, columns=features_svr), scaler_X
+    scaler = MinMaxScaler()
+    data['מספר לקוחות מנורמל'] = scaler.fit_transform(data[['מספר לקוחות']])
+    return data
+
 
 # Preprocessing function for RF and Stacking RF
 def preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
@@ -212,32 +212,33 @@ def preprocess_input_rf(start_date, end_date, num_customers, average_customers_p
 
 def predict_dishes(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     results = {}
-    input_data_svr, scaler_X = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
+    input_data_svr = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     input_data_rf = preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
 
     for dish in dish_columns:
         best_model_type = optimal_models_df.loc[optimal_models_df['Dish'] == dish, 'Model'].values[0]
         if best_model_type == 'SVR':
-            predictions = load_model_and_predict(dish, input_data_svr, best_model_type, scaler_X)
+            predictions = load_model_and_predict(dish, input_data_svr, best_model_type)
         else:
             predictions = load_model_and_predict(dish, input_data_rf, best_model_type)
         results[dish] = predictions
 
     return results
     
-def load_model_and_predict(dish, input_data, model_type, scaler_X=None, scaler_y=None):
+def load_model_and_predict(dish, input_data, model_type):
     model_type = model_type.lower()
     if model_type == 'svr':
-        model_type = 'svr'
+        model_file = f'{models_path}best_svr_model_{dish}.pkl'
+        features = input_data[features_svr]
     elif model_type == 'stacking rf':
-        model_type = 'stacking_rf'
+        model_file = f'{models_path}best_stacking_rf_model_{dish}.pkl'
+        features = input_data[features_stacking_rf]
     elif model_type == 'random forest':
-        model_type = 'rf'
+        model_file = f'{models_path}best_rf_model_{dish}.pkl'
+        features = input_data[features_rf]
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
-    model_file = f'{models_path}best_{model_type}_model_{quote(dish)}.pkl'
-    
     # Download the model file from the given URL
     try:
         response = requests.get(model_file)
@@ -250,17 +251,8 @@ def load_model_and_predict(dish, input_data, model_type, scaler_X=None, scaler_y
         st.error(f"Error in loading the model: {model_file}, Error: {e}")
         return np.array([])
 
-    if model_type == 'svr' and scaler_X is not None:
-        features = input_data[features_svr]
-        predictions = model.predict(features)
-        predictions_original_scale = scaler_y.inverse_transform(predictions.reshape(-1, 1))
-        predictions = np.ceil(predictions_original_scale).astype(int)
-    elif model_type == 'stacking_rf':
-        features = input_data[features_stacking_rf]
-        predictions = model.predict(features)
-    else:
-        features = input_data[features_rf]
-        predictions = model.predict(features)        
+    predictions = model.predict(features)
+    predictions = np.ceil(predictions).astype(int)
 
     return predictions
     
