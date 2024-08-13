@@ -162,6 +162,10 @@ features_rf = [feature for feature in features if feature not in ['לקוחות 
 features_svr = features
 features_stacking_rf = features 
 
+# הגדרת הסקלרים לכל מנה
+scaler_X = MinMaxScaler()
+scaler_y_dict = {dish: MinMaxScaler() for dish in dish_columns}
+
 def add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     data['תאריך'] = pd.to_datetime(data['תאריך'])
     data['יום בשבוע'] = data['תאריך'].dt.dayofweek + 1
@@ -197,10 +201,10 @@ def preprocess_input_svr(start_date, end_date, num_customers, average_customers_
     data['מספר לקוחות'] = num_customers
     data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     
-    scaler_X = MinMaxScaler()
-    data[features_svr] = scaler_X.fit_transform(data[features_svr])
+    # נרמול של כל הפיצ'רים כולל המנות
+    data[features] = scaler_X.fit_transform(data[features])
     
-    return data, scaler_X
+    return data
 
 # Preprocessing function for RF and Stacking RF
 def preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
@@ -212,20 +216,20 @@ def preprocess_input_rf(start_date, end_date, num_customers, average_customers_p
 
 def predict_dishes(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     results = {}
-    input_data_svr, scaler_X = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
+    input_data_svr = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     input_data_rf = preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
 
     for dish in dish_columns:
         best_model_type = optimal_models_df.loc[optimal_models_df['Dish'] == dish, 'Model'].values[0]
         if best_model_type == 'SVR':
-            predictions = load_model_and_predict(dish, input_data_svr, best_model_type, scaler_X)
+            predictions = load_model_and_predict(dish, input_data_svr, best_model_type)
         else:
             predictions = load_model_and_predict(dish, input_data_rf, best_model_type)
         results[dish] = predictions
 
     return results
     
-def load_model_and_predict(dish, input_data, model_type, scaler_X=None):
+def load_model_and_predict(dish, input_data, model_type):
     model_type = model_type.lower()
     if model_type == 'svr':
         model_file = f'{models_path}best_svr_model_{dish}.pkl'
@@ -239,10 +243,10 @@ def load_model_and_predict(dish, input_data, model_type, scaler_X=None):
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
-    # Download the model file from the given URL
+    # הורדת קובץ המודל מה-URL
     try:
         response = requests.get(model_file)
-        response.raise_for_status()  # Check if the request was successful
+        response.raise_for_status()  # בדוק אם הבקשה הצליחה
         model = joblib.load(BytesIO(response.content))
     except requests.exceptions.RequestException as e:
         st.error(f"Model file not found or error in loading: {model_file}, Error: {e}")
@@ -253,10 +257,11 @@ def load_model_and_predict(dish, input_data, model_type, scaler_X=None):
 
     predictions_scaled = model.predict(features)
     
-    if model_type == 'svr' and scaler_X is not None:
-        predictions = scaler_X.inverse_transform(predictions_scaled.reshape(-1, 1)).flatten()
-    else:
-        predictions = np.ceil(predictions_scaled).astype(int)
+    # דה-נורמליזציה לתחזיות באמצעות הסקלר של המנה
+    scaler_y = scaler_y_dict[dish]
+    predictions = scaler_y.inverse_transform(predictions_scaled.reshape(-1, 1)).flatten()
+    
+    predictions = np.ceil(predictions).astype(int)
 
     return predictions
 
