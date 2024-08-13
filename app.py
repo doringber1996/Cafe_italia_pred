@@ -180,10 +180,14 @@ def add_features(data, average_customers_per_day, average_customers_per_month, h
     data['סוף שבוע'] = data['יום בשבוע'].isin([5, 6, 7])
 
     # Create new features based on correlation values
+    new_features = {}
     for dish1, dish2, corr_value in high_corr_pairs:
         new_feature_name = f"{dish1}_corr_{dish2}"
-        data[new_feature_name] = corr_value
-
+        new_features[new_feature_name] = corr_value
+    
+    new_features_df = pd.DataFrame(new_features, index=data.index)
+    data = pd.concat([data, new_features_df], axis=1)
+    
     return data
 
 # Preprocessing function for SVR
