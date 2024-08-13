@@ -159,7 +159,8 @@ features = ["מספר לקוחות",
 
 # Define the features to be used by each model
 features_rf = [feature for feature in features if feature not in ['לקוחות יחס יומי', 'לקוחות יחס חודשי', 'סוף שבוע']]
-features_svr = features  # Assuming SVR uses all features
+features_svr = features
+features_stacking_rf = features 
 
 # פונקציה להוספת פיצ'רים נגזרים לסט האימון
 def add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs):
@@ -208,7 +209,6 @@ def preprocess_input_rf(start_date, end_date, num_customers, average_customers_p
     data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     return data
 
-# Prediction function
 def predict_dishes(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     results = {}
     input_data_svr = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
@@ -223,21 +223,22 @@ def predict_dishes(start_date, end_date, num_customers, average_customers_per_da
         results[dish] = predictions
 
     return results
-
+    
 # Define function to load model and make predictions
 def load_model_and_predict(dish, input_data, model_type):
     model_type = model_type.lower()
     if model_type == 'svr':
-        model_type = 'svr'
+        model_file = f'{models_path}best_svr_model_{dish}.pkl'
+        features = input_data[features_svr]
     elif model_type == 'stacking rf':
-        model_type = 'stacking_rf'
+        model_file = f'{models_path}best_stacking_rf_model_{dish}.pkl'
+        features = input_data[features_stacking_rf]
     elif model_type == 'random forest':
-        model_type = 'rf'
+        model_file = f'{models_path}best_rf_model_{dish}.pkl'
+        features = input_data[features_rf]
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
-    model_file = f'{models_path}best_{model_type}_model_{dish}.pkl'
-    
     # Download the model file from the given URL
     try:
         response = requests.get(model_file)
@@ -250,18 +251,11 @@ def load_model_and_predict(dish, input_data, model_type):
         st.error(f"Error in loading the model: {model_file}, Error: {e}")
         return np.array([])
 
-    if model_type == 'svr':
-        features = input_data[features_svr]
-    else:
-        features = input_data[features_rf]
-
     predictions = model.predict(features)
-
-    # המרה למספרים שלמים בעזרת np.ceil
     predictions = np.ceil(predictions).astype(int)
 
     return predictions
-
+    
 # Compute average customers per day and month
 average_customers_per_day= {1: 264.2421052631579, 2: 284.775, 3: 294.87704918032784, 4: 296.3606557377049, 5: 352.64516129032256, 6: 354.008064516129, 7: 357.3414634146341}
 average_customers_per_month = {1: 334.28409090909093, 2: 350.51851851851853, 3: 337.4623655913978, 4: 313.58024691358025, 5: 309.14606741573033, 6: 307.3448275862069, 7: 312.4561403508772, 8: 336.41379310344826, 9: 310.47058823529414, 10: 216.94545454545454, 11: 282.43859649122805, 12: 352.66129032258067}
