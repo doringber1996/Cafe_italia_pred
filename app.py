@@ -439,7 +439,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.image(logo_url, width=200, use_container_width=False)
+st.image(logo_url, width=200)
 
 st.markdown('<h1 class="title">Dish Prediction Application</h1>', unsafe_allow_html=True)
 
