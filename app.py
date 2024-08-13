@@ -197,11 +197,10 @@ def preprocess_input_svr(start_date, end_date, num_customers, average_customers_
     data['מספר לקוחות'] = num_customers
     data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     
-    scaler = MinMaxScaler()
-    data[['מספר לקוחות']] = scaler.fit_transform(data[['מספר לקוחות']])
+    scaler_X = MinMaxScaler()
+    scaled_data = scaler_X.fit_transform(data[features_svr])
     
-    return data, scaler
-
+    return pd.DataFrame(scaled_data, columns=features_svr), scaler_X
 
 # Preprocessing function for RF and Stacking RF
 def preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
@@ -213,20 +212,20 @@ def preprocess_input_rf(start_date, end_date, num_customers, average_customers_p
 
 def predict_dishes(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     results = {}
-    input_data_svr, scaler = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
+    input_data_svr, scaler_X = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     input_data_rf = preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
 
     for dish in dish_columns:
         best_model_type = optimal_models_df.loc[optimal_models_df['Dish'] == dish, 'Model'].values[0]
         if best_model_type == 'SVR':
-            predictions = load_model_and_predict(dish, input_data_svr, best_model_type, scaler)
+            predictions = load_model_and_predict(dish, input_data_svr, best_model_type, scaler_X)
         else:
             predictions = load_model_and_predict(dish, input_data_rf, best_model_type)
         results[dish] = predictions
 
     return results
     
-def load_model_and_predict(dish, input_data, model_type, scaler=None):
+def load_model_and_predict(dish, input_data, model_type, scaler_X=None, scaler_y=None):
     model_type = model_type.lower()
     if model_type == 'svr':
         model_type = 'svr'
@@ -251,19 +250,17 @@ def load_model_and_predict(dish, input_data, model_type, scaler=None):
         st.error(f"Error in loading the model: {model_file}, Error: {e}")
         return np.array([])
 
-    if model_type == 'svr':
+    if model_type == 'svr' and scaler_X is not None:
         features = input_data[features_svr]
         predictions = model.predict(features)
-        predictions = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
+        predictions_original_scale = scaler_y.inverse_transform(predictions.reshape(-1, 1))
+        predictions = np.ceil(predictions_original_scale).astype(int)
     elif model_type == 'stacking_rf':
         features = input_data[features_stacking_rf]
         predictions = model.predict(features)
     else:
         features = input_data[features_rf]
         predictions = model.predict(features)        
-
-    # המרה למספרים שלמים בעזרת np.ceil
-    predictions = np.ceil(predictions).astype(int)
 
     return predictions
     
