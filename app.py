@@ -201,11 +201,13 @@ def preprocess_input_svr(start_date, end_date, num_customers, average_customers_
     data['מספר לקוחות'] = num_customers
     data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     
-    # נרמול של כל הפיצ'רים כולל המנות
+    # נרמול של כל הפיצ'רים
     data[features] = scaler_X.fit_transform(data[features])
     
+    # נרמול מספר הלקוחות
+    scaler_y_dict['מספר לקוחות'].fit(data[['מספר לקוחות']])
+    
     return data
-
 # Preprocessing function for RF and Stacking RF
 def preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     dates = pd.date_range(start=start_date, end=end_date, freq='D')
@@ -228,6 +230,7 @@ def predict_dishes(start_date, end_date, num_customers, average_customers_per_da
         results[dish] = predictions
 
     return results
+
     
 def load_model_and_predict(dish, input_data, model_type):
     model_type = model_type.lower()
@@ -258,12 +261,13 @@ def load_model_and_predict(dish, input_data, model_type):
     predictions_scaled = model.predict(features)
     
     # דה-נורמליזציה לתחזיות באמצעות הסקלר של המנה
-    scaler_y = scaler_y_dict[dish]
+    scaler_y = scaler_y_dict['מספר לקוחות']
     predictions = scaler_y.inverse_transform(predictions_scaled.reshape(-1, 1)).flatten()
     
     predictions = np.ceil(predictions).astype(int)
 
     return predictions
+
 
 # Compute average customers per day and month
 average_customers_per_day = {1: 264.2421052631579, 2: 284.775, 3: 294.87704918032784, 4: 296.3606557377049, 5: 352.64516129032256, 6: 354.008064516129, 7: 357.3414634146341}
