@@ -1,4 +1,3 @@
-
 import os
 import joblib
 import pandas as pd
@@ -25,21 +24,6 @@ restaurant_url = f'{models_path}cafe-italia.jpg'
 
 # Define the list of dishes
 dish_columns = optimal_models_df['Dish'].unique()
-
-# Load train data from GitHub
-train_data_url = 'https://raw.githubusercontent.com/doringber1996/Cafe_italia_pred/main/train_data.csv'
-train_data = pd.read_csv(train_data_url)
-
-# Create MinMaxScaler based on train_data
-scaler_X = MinMaxScaler()
-scaler_y_dict = {dish: MinMaxScaler() for dish in dish_columns}
-
-# Normalize X in train_data
-scaled_X_train = scaler_X.fit_transform(train_data[features])
-
-# Normalize y in train_data for each dish
-for dish in dish_columns:
-    scaler_y_dict[dish].fit(train_data[[dish]])
 
 features = ["מספר לקוחות",
 "יום בשבוע",
@@ -172,6 +156,21 @@ features = ["מספר לקוחות",
 "לקוחות יחס חודשי",
 "סוף שבוע"
 ]
+
+# Load train data from GitHub
+train_data_url = 'https://raw.githubusercontent.com/doringber1996/Cafe_italia_pred/main/train_data.csv'
+train_data = pd.read_csv(train_data_url)
+
+# Create MinMaxScaler based on train_data
+scaler_X = MinMaxScaler()
+scaler_y_dict = {dish: MinMaxScaler() for dish in dish_columns}
+
+# Normalize X in train_data
+scaled_X_train = scaler_X.fit_transform(train_data[features])
+
+# Normalize y in train_data for each dish
+for dish in dish_columns:
+    scaler_y_dict[dish].fit(train_data[[dish]])
 
 # Define the features to be used by each model
 features_rf = [feature for feature in features if feature not in ['לקוחות יחס יומי', 'לקוחות יחס חודשי', 'סוף שבוע']]
