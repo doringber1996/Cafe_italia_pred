@@ -197,8 +197,6 @@ def preprocess_input_svr(start_date, end_date, num_customers, average_customers_
     data = pd.DataFrame({'תאריך': dates})
     data['מספר לקוחות'] = num_customers
     data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
-    scaler = MinMaxScaler()
-    data['מספר לקוחות מנורמל'] = scaler.fit_transform(data[['מספר לקוחות']])
     return data
 
 # Preprocessing function for RF and Stacking RF
@@ -228,17 +226,16 @@ def predict_dishes(start_date, end_date, num_customers, average_customers_per_da
 def load_model_and_predict(dish, input_data, model_type):
     model_type = model_type.lower()
     if model_type == 'svr':
-        model_file = f'{models_path}best_svr_model_{dish}.pkl'
-        features = input_data[features_svr]
+        model_type = 'svr'
     elif model_type == 'stacking rf':
-        model_file = f'{models_path}best_stacking_rf_model_{dish}.pkl'
-        features = input_data[features_stacking_rf]
+        model_type = 'stacking_rf'
     elif model_type == 'random forest':
-        model_file = f'{models_path}best_rf_model_{dish}.pkl'
-        features = input_data[features_rf]
+        model_type = 'rf'
     else:
         raise ValueError(f"Unknown model type: {model_type}")
 
+    model_file = f'{models_path}best_{model_type}_model_{quote(dish)}.pkl'
+    
     # Download the model file from the given URL
     try:
         response = requests.get(model_file)
@@ -251,7 +248,19 @@ def load_model_and_predict(dish, input_data, model_type):
         st.error(f"Error in loading the model: {model_file}, Error: {e}")
         return np.array([])
 
+    if model_type == 'svr':
+        scaler = MinMaxScaler()
+        input_data[['מספר לקוחות']] = scaler.fit_transform(input_data[['מספר לקוחות']])
+        features = input_data[features_svr]
+    else:
+        features = input_data[features_rf]
+
     predictions = model.predict(features)
+
+    if model_type == 'svr':
+        predictions = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
+
+    # המרה למספרים שלמים בעזרת np.ceil
     predictions = np.ceil(predictions).astype(int)
 
     return predictions
