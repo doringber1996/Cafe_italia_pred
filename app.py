@@ -257,10 +257,10 @@ def load_model_and_predict(dish, input_data, model_type, scaler=None):
         predictions = scaler.inverse_transform(predictions.reshape(-1, 1)).flatten()
     elif model_type == 'stacking_rf':
         features = input_data[features_stacking_rf]
-        predictions = model.predict(features)
     else:
         features = input_data[features_rf]
-        predictions = model.predict(features)        
+    
+    predictions = model.predict(features)
 
     # המרה למספרים שלמים בעזרת np.ceil
     predictions = np.ceil(predictions).astype(int)
