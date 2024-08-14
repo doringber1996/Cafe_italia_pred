@@ -62,7 +62,7 @@ high_corr_pairs = []
 for i in range(len(corr_matrix.columns)):
     for j in range(i):
         corr_value = corr_matrix.iloc[i, j]
-        if abs(corr_value) > threshold:
+        if abs(corr_value) > 0.5:
             high_corr_pairs.append((corr_matrix.columns[i], corr_matrix.columns[j], corr_value))
 
 # Create new features based on correlation values
