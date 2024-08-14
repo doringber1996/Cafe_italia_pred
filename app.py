@@ -64,6 +64,8 @@ for i in range(len(corr_matrix.columns)):
         corr_value = corr_matrix.iloc[i, j]
         if abs(corr_value) > 0.5:
             high_corr_pairs.append((corr_matrix.columns[i], corr_matrix.columns[j], corr_value))
+            
+print(high_corr_pairs)
 
 # Create new features based on correlation values
 for dish1, dish2, corr_value in high_corr_pairs:
