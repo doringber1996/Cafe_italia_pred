@@ -464,7 +464,7 @@ end_date = st.date_input("End Date", datetime.now() + timedelta(days=1))
 num_customers = st.number_input("Number of Customers", min_value=1, step=1)
 
 if st.button("Predict"):
-    results = predict_dishes(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
+    results = predict_dishes(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs, scaler_X, scaler_y_dict)
 
     results_text = "Predicted Dishes:\n"
     predictions_data = []
@@ -478,7 +478,7 @@ if st.button("Predict"):
     st.dataframe(predictions_df, use_container_width=True, height=40 * predictions_df.shape[0])
 
     # Display results as a bar chart
-    st.markdown('<h2 class="title">Prediction Bar Chart</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="title">Prediction Bar Chart</2>', unsafe_allow_html=True)
 
     chart = alt.Chart(predictions_df).mark_bar().encode(
         x=alt.X('Dish', sort=None, axis=alt.Axis(labelAngle=0)), 
