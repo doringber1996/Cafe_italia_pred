@@ -199,6 +199,8 @@ def add_features(data, average_customers_per_day, average_customers_per_month, h
 
     new_features = {}
     for dish1, dish2, corr_value in high_corr_pairs:
+        dish1=dish1.replace('\','')
+        dish2=dish2.replace('\','')
         new_feature_name = f"{dish1}_corr_{dish2}"
         new_features[new_feature_name] = corr_value
     
