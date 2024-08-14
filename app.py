@@ -161,6 +161,13 @@ features = ["מספר לקוחות",
 train_data_url = 'https://raw.githubusercontent.com/doringber1996/Cafe_italia_pred/main/train_data.csv'
 train_data = pd.read_csv(train_data_url)
 
+# Print columns of train_data
+print("Columns in train_data:", train_data.columns.tolist())
+
+# Check for missing columns in train_data
+missing_columns = [col for col in features if col not in train_data.columns]
+print("Missing columns in train_data:", missing_columns)
+
 # Create MinMaxScaler based on train_data
 scaler_X = MinMaxScaler()
 scaler_y_dict = {dish: MinMaxScaler() for dish in dish_columns}
