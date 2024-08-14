@@ -34,7 +34,7 @@ scaler_X = MinMaxScaler()
 scaler_y_dict = {dish: MinMaxScaler() for dish in dish_columns}
 
 # Normalize X in train_data
-scaled_X_train = scaler_X.fit_transform(train_data[features])
+scaled_X_train = scaler_X.fit_transform(train_data[[features]])
 
 # Normalize y in train_data for each dish
 for dish in dish_columns:
