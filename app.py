@@ -201,15 +201,11 @@ def preprocess_input_rf(start_date, end_date, num_customers, average_customers_p
 
 def predict_dishes(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
     results = {}
-    input_data_svr = preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
     input_data_rf = preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs)
 
     for dish in dish_columns:
         best_model_type = optimal_models_df.loc[optimal_models_df['Dish'] == dish, 'Model'].values[0]
-        if best_model_type == 'SVR':
-            predictions = load_model_and_predict(dish, input_data_svr, best_model_type)
-        else:
-            predictions = load_model_and_predict(dish, input_data_rf, best_model_type)
+        predictions = load_model_and_predict(dish, input_data_rf, best_model_type)
         results[dish] = predictions
 
     return results
