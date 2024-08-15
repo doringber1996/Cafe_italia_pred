@@ -18,6 +18,9 @@ models_path = 'https://raw.githubusercontent.com/doringber1996/Cafe_italia_pred/
 #Load the dataset containing model information
 optimal_models_df = pd.read_csv(f'{models_path}optimal_models_results.csv')
 
+#Load the dataset containing model information
+train_data = pd.read_csv(f'{models_path}train_data.csv')
+
 # Load images from GitHub
 logo_url = f'{models_path}logo.png'
 restaurant_url = f'{models_path}cafe-italia.jpg'
