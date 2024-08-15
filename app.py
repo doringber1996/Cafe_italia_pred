@@ -158,7 +158,7 @@ features = ["מספר לקוחות",
 ]
 
 # Define the features to be used by each model
-features_rf = [feature for feature in features if feature not in ['לקוחות יחס יומי', 'לקוחות יחס חודשי', 'סוף שבוע']]
+features_rf = features 
 features_stacking_rf = features 
 
 # פונקציה להוספת פיצ'רים נגזרים לסט האימון
