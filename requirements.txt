@@ -7,3 +7,4 @@ requests
 scikit-learn==1.2.2
 xgboost==2.1.1
 sklearn-pandas== 2.2.0
+Cython ==3.0.10
