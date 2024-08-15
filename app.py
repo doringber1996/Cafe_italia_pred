@@ -159,7 +159,6 @@ features = ["מספר לקוחות",
 
 # Define the features to be used by each model
 features_rf = [feature for feature in features if feature not in ['לקוחות יחס יומי', 'לקוחות יחס חודשי', 'סוף שבוע']]
-features_svr = features
 features_stacking_rf = features 
 
 # פונקציה להוספת פיצ'רים נגזרים לסט האימון
@@ -191,16 +190,6 @@ def add_features(data, average_customers_per_day, average_customers_per_month, h
     
     return data
 
-# Preprocessing function for SVR
-def preprocess_input_svr(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
-    dates = pd.date_range(start=start_date, end=end_date, freq='D')
-    data = pd.DataFrame({'תאריך': dates})
-    data['מספר לקוחות'] = num_customers
-    data = add_features(data, average_customers_per_day, average_customers_per_month, high_corr_pairs)
-    scaler = MinMaxScaler()
-    data['מספר לקוחות מנורמל'] = scaler.fit_transform(data[['מספר לקוחות']])
-    return data
-
 
 # Preprocessing function for RF and Stacking RF
 def preprocess_input_rf(start_date, end_date, num_customers, average_customers_per_day, average_customers_per_month, high_corr_pairs):
@@ -227,10 +216,7 @@ def predict_dishes(start_date, end_date, num_customers, average_customers_per_da
     
 def load_model_and_predict(dish, input_data, model_type):
     model_type = model_type.lower()
-    if model_type == 'svr':
-        model_file = f'{models_path}best_svr_model_{dish}.pkl'
-        features = input_data[features_svr]
-    elif model_type == 'stacking rf':
+    if model_type == 'stacking rf':
         model_file = f'{models_path}best_stacking_rf_model_{dish}.pkl'
         features = input_data[features_stacking_rf]
     elif model_type == 'random forest':
@@ -287,9 +273,7 @@ high_corr_pairs=[("חציל פרמז'ן", "פוקצ'ת הבית", 0.679420403402
  ('פפרדלה פטריות ושמנת', 'סלט קיסר', 0.5587692346393143),
  ("פטוצ'יני תרד גורגונזולה", "פוקצ'ת הבית", 0.6106123233284888),
  ("פטוצ'יני תרד גורגונזולה", "חציל פרמז'ן", 0.6018334628902513),
- ("פטוצ'יני תרד גורגונזולה",
-  "קרפצ'יו בקר אורוגולה ופרמז'ן",
-  0.5552737545191738),
+ ("פטוצ'יני תרד גורגונזולה","קרפצ'יו בקר אורוגולה ופרמז'ן",0.5552737545191738),
  ("פטוצ'יני תרד גורגונזולה", 'פפרדלה פטריות ושמנת', 0.5824326540937602),
  ('פסטה בולונז', "פוקצ'ת הבית", 0.6115376682817356),
  ('פסטה בולונז', "חציל פרמז'ן", 0.7171825635824794),
@@ -313,9 +297,7 @@ high_corr_pairs=[("חציל פרמז'ן", "פוקצ'ת הבית", 0.679420403402
  ('פנה קרבונרה', 'פסטה בולונז', 0.6935278833259493),
  ('מאצי רוזה אפונה ובייקון', "פוקצ'ת הבית", 0.5177139619781851),
  ('מאצי רוזה אפונה ובייקון', "חציל פרמז'ן", 0.5605613479153516),
- ('מאצי רוזה אפונה ובייקון',
-  "קרפצ'יו בקר אורוגולה ופרמז'ן",
-  0.5325434409314381),
+ ('מאצי רוזה אפונה ובייקון',"קרפצ'יו בקר אורוגולה ופרמז'ן",0.5325434409314381),
  ('מאצי רוזה אפונה ובייקון', 'פסטה בולונז', 0.5740857245505439),
  ('מאצי רוזה אפונה ובייקון', 'פנה קרבונרה', 0.5872379238712979),
  ('לזניה בולונז', "פוקצ'ת הבית", 0.6101439681575348),
