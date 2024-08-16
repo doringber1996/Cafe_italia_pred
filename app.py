@@ -12,7 +12,6 @@ import requests
 from sklearn.ensemble import StackingRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 
-!pip install --upgrade pip
 
 # Path to the folder containing the models and images
 models_path = 'https://raw.githubusercontent.com/doringber1996/Cafe_italia_pred/main/'
