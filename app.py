@@ -111,7 +111,7 @@ def predict_dishes(start_date, end_date, num_customers, average_customers_per_da
 def load_model_and_predict(dish, input_data, model_type):
     model_type = model_type.lower()
     if model_type == 'stacking rf':
-        model_file = f'{models_path}best_stacking_rf_model_{dish}.pkl'
+        model_file = f'{models_path}best_stacking_model_{dish}.pkl'
         features = input_data[features_stacking_rf]
     elif model_type == 'random forest':
         model_file = f'{models_path}best_rf_model_{dish}.pkl'
